@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimeOst - Лучшие аниме-саундтреки</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">AnimeOst</div>
+            
+            <ul class="menu">
+                <li class="dropdown">
+                    <a href="#" class="dropbtn">Главная ⏷</a>
+                    <ul class="dropdown-content">                       
+                        <li><a href="#" class="dropdown-section">Типы музыки</a></li>
+                        <li><a href="#">Опенинги</a></li>
+                        <li><a href="#">Эндинги</a></li>
+                        <li><a href="#">Темы/Саундтреки</a></li>
+                        
+                        <li><a href="#" class="dropdown-section">Подборки</a></li>
+                        <li><a href="#">Популярное</a></li>
+                        <li><a href="#">Новое</a></li>
+                        <li><a href="#">Лучшее из недооцененных</a></li>
+                    </ul>
+                </li>
+                
+                <!-- Кнопка регистрации С ИКОНКОЙ -->
+                <li>
+                    <a href="#" class="register-btn" id="showRegister">
+                        <img src="картинки/pencil.png" alt="" class="register-icon">
+                        Вход/Регистрация
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Поиск по центру -->
+            <div class="search-container">
+                <div class="search-icon">
+                    <img src="картинки/magnifying-glass.png" alt="Поиск">
+                </div>
+                <input type="text" placeholder="Поиск аниме/саундтреков..." class="search-box">
+            </div>
+        </nav>
+    </header>
+
+    <!-- Окно регистрации/входа -->
+<div class="modal-overlay" id="registerModal">
+    <div class="auth-container">
+        <div class="auth-form">
+            <span class="close-btn" id="closeRegister">&times;</span>
+            
+            <!-- Форма регистрации -->
+            <div id="registerFormContainer">
+                <h2>Регистрация</h2>
+                <form id="registerForm">
+                    <div class="input-group">
+                        <input type="text" name="username" placeholder="Имя пользователя" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="email" name="email" placeholder="Email" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" name="password" placeholder="Пароль" required>
+                    </div>
+                    <button type="submit" class="auth-btn">Зарегистрироваться</button>
+                </form>
+                <div class="auth-links">
+                    <p>Уже есть аккаунт? <a href="#" id="showLoginForm">Войти</a></p>
+                </div>
+            </div>
+
+            <!-- Форма входа -->
+            <div id="loginFormContainer" style="display: none;">
+                <h2>Вход</h2>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <input type="text" name="username" placeholder="Имя пользователя" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" name="password" placeholder="Пароль" required>
+                    </div>
+                    <button type="submit" class="auth-btn">Войти</button>
+                </form>
+                <div class="auth-links">
+                    <p>Нет аккаунта? <a href="#" id="showRegisterForm">Зарегистрироваться</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <main>
+        <section class="hero">
+            <h1>Всё про музыку из ваших любимых аниме</h1>
+            <p>Находите и узнавайте про опенинги, эндинги и осты понравившихся вам аниме</p>
+        </section>
+
+        <section class="popular-tracks">
+            <h2>Популярные треки</h2>
+            <div class="carousel-container">
+                <button class="carousel-btn carousel-btn-prev">‹</button>
+                <div class="carousel">
+                    <div class="carousel-track" id="carouselTrack">
+                        <!-- Карточки будут добавляться через JavaScript -->
+                    </div>
+                </div>
+                <button class="carousel-btn carousel-btn-next">›</button>
+            </div>
+            <div class="carousel-dots" id="carouselDots">
+                <!-- Точки для навигации -->
+            </div>
+        </section>
+
+        <!-- Секция топ избранных треков -->
+<section class="favorites-section">
+    <h2>Топ по добавлениям в "Любимое"</h2>
+    <div class="favorites-table-container">
+        <table class="favorites-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">№</th>
+                    <th>Трек</th>
+                    <th style="width: 100px;">Добавлений</th>
+                </tr>
+            </thead>
+            <tbody class="favorites-top-table">
+                <!-- Сюда загрузятся топ треки в виде таблицы -->
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Секция последних избранных треков -->
+<section class="favorites-section">
+    <h2>Последние добавленные в "Любимое"</h2>
+    <div class="favorites-table-container">
+        <table class="favorites-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">№</th>
+                    <th>Трек</th>
+                    <th style="width: 120px;">Когда добавлен</th>
+                </tr>
+            </thead>
+            <tbody class="favorites-recent-table">
+                <!-- Сюда загрузятся последние треки в виде таблицы -->
+            </tbody>
+        </table>
+    </div>
+</section>
+        
+    </main>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
