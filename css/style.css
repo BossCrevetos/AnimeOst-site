@@ -936,3 +936,432 @@ nav {
         min-height: 44px;
     }
 }
+/* Мобильная навигация */
+.mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 8px;
+    background: none;
+    border: none;
+}
+
+.mobile-menu-btn span {
+    width: 25px;
+    height: 3px;
+    background: rgb(215, 215, 215);
+    margin: 3px 0;
+    transition: 0.3s;
+    border-radius: 2px;
+}
+
+/* Улучшенная мобильная адаптация */
+@media (max-width: 768px) {
+    /* Мобильное меню */
+    .mobile-menu-btn {
+        display: flex;
+        order: 2;
+        margin-left: auto;
+    }
+
+    .menu {
+        position: fixed;
+        top: 70px;
+        left: -100%;
+        width: 100%;
+        height: calc(100vh - 70px);
+        background: #6314a3;
+        flex-direction: column;
+        padding: 20px;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        gap: 0;
+    }
+
+    .menu.active {
+        left: 0;
+    }
+
+    .menu li {
+        width: 100%;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .menu li:last-child {
+        border-bottom: none;
+    }
+
+    .dropbtn,
+    .register-btn {
+        width: 100%;
+        text-align: left;
+        padding: 15px;
+        justify-content: flex-start;
+        border: none;
+        background: none;
+        border-radius: 0;
+    }
+
+    .dropdown-content {
+        position: static;
+        background: transparent;
+        box-shadow: none;
+        width: 100%;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        margin-top: 0;
+        display: none;
+    }
+
+    .dropdown-content.show {
+        display: block;
+    }
+
+    .dropdown-content a {
+        padding: 12px 30px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .dropdown-content a:last-child {
+        border-bottom: none;
+    }
+
+    /* Шапка */
+    nav {
+        flex-wrap: wrap;
+        padding: 10px 15px;
+    }
+
+    .logo {
+        margin-left: 0;
+        font-size: 1.4rem;
+        order: 1;
+    }
+
+    .search-container {
+        order: 3;
+        width: 100%;
+        margin-top: 15px;
+        max-width: none;
+        min-width: auto;
+    }
+
+    /* Карусель */
+    .carousel-container {
+        padding: 30px 0;
+    }
+
+    .carousel {
+        height: 320px;
+    }
+
+    .carousel-card {
+        width: 220px;
+        height: 280px;
+        padding: 15px;
+    }
+
+    .carousel-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .carousel-btn-prev {
+        left: 5px;
+    }
+
+    .carousel-btn-next {
+        right: 5px;
+    }
+
+    .track-image {
+        height: 140px;
+    }
+
+    .track-title {
+        font-size: 1.4rem;
+    }
+
+    .track-artist {
+        font-size: 1.1rem;
+    }
+
+    .track-anime {
+        font-size: 1rem;
+    }
+
+    /* Герой секция */
+    .hero {
+        padding: 40px 1rem;
+        margin-bottom: 30px;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    /* Секции */
+    .popular-tracks,
+    .favorites-section {
+        padding: 0 1rem 40px;
+    }
+
+    .popular-tracks h2,
+    .favorites-section h2 {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+    }
+
+    /* Таблицы */
+    .favorites-table {
+        font-size: 14px;
+    }
+
+    .favorite-track-image {
+        width: 50px;
+        height: 50px;
+    }
+
+    .favorite-track-title {
+        font-size: 14px;
+    }
+
+    .favorite-track-artist,
+    .favorite-track-anime {
+        font-size: 12px;
+    }
+
+    .favorite-count {
+        font-size: 13px;
+        padding: 4px 10px;
+    }
+
+    /* Модальное окно */
+    .auth-container {
+        padding: 2rem 1.5rem;
+        width: 95%;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Еще более мелкие экраны */
+    .carousel-card {
+        width: 200px;
+        height: 260px;
+    }
+
+    .carousel {
+        height: 300px;
+    }
+
+    .track-image {
+        height: 120px;
+    }
+
+    .track-title {
+        font-size: 1.2rem;
+    }
+
+    .track-artist {
+        font-size: 1rem;
+    }
+
+    .track-anime {
+        font-size: 0.9rem;
+    }
+
+    /* Таблицы для маленьких экранов */
+    .favorite-track-info {
+        gap: 10px;
+    }
+
+    .favorite-track-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    .favorites-table th,
+    .favorites-table td {
+        padding: 10px 8px;
+    }
+
+    .favorites-table th:first-child,
+    .favorites-table td:first-child {
+        width: 40px;
+    }
+
+    .favorites-table th:last-child,
+    .favorites-table td:last-child {
+        width: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-card {
+        width: 180px;
+        height: 240px;
+        padding: 12px;
+    }
+
+    .carousel {
+        height: 280px;
+    }
+
+    .track-image {
+        height: 110px;
+    }
+
+    .play-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 10px;
+    }
+
+    .heart-btn {
+        font-size: 24px;
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Скрываем текст в кнопках на очень маленьких экранах */
+    .register-btn span {
+        display: none;
+    }
+
+    .dropbtn span {
+        display: none;
+    }
+
+    .dropbtn::after {
+        content: "☰";
+        font-size: 1.2rem;
+    }
+}
+
+/* Улучшения для тач-устройств */
+@media (pointer: coarse) {
+    .carousel-btn,
+    .play-btn,
+    .heart-btn,
+    .dropbtn,
+    .register-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .carousel-dot {
+        width: 16px;
+        height: 16px;
+    }
+
+    .search-box {
+        padding: 12px 15px 12px 40px;
+    }
+}
+
+/* Портретная ориентация */
+@media (max-width: 768px) and (orientation: portrait) {
+    .carousel-container {
+        padding: 20px 0;
+    }
+
+    .carousel {
+        height: 280px;
+    }
+}
+
+/* Ландшафтная ориентация */
+@media (max-width: 900px) and (orientation: landscape) {
+    .carousel {
+        height: 300px;
+    }
+
+    .carousel-card {
+        width: 200px;
+        height: 260px;
+    }
+}
+
+/* Высокие экраны */
+@media (min-height: 800px) and (max-width: 768px) {
+    .carousel {
+        height: 350px;
+    }
+
+    .carousel-card {
+        height: 300px;
+    }
+}
+/* Анимация бургер-меню */
+.mobile-menu-btn.active span:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.mobile-menu-btn.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-btn.active span:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+/* Мобильное выпадающее меню */
+@media (max-width: 768px) {
+    .dropdown-content {
+        position: static;
+        background: transparent;
+        box-shadow: none;
+        width: 100%;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        margin-top: 0;
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .dropdown-content.show {
+        display: block;
+        max-height: 500px;
+    }
+
+    .dropdown-content a {
+        padding: 12px 30px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgb(215, 215, 215);
+        text-decoration: none;
+        display: block;
+        transition: background 0.3s;
+    }
+
+    .dropdown-content a:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .dropdown-section {
+        color: #a557e6 !important;
+        font-weight: bold;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 5px;
+        pointer-events: none;
+        padding: 12px 30px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Стрелка для индикации выпадающего меню */
+    .dropbtn::after {
+        content: " ⏷";
+        font-size: 0.9em;
+    }
+
+    .dropdown-content.show ~ .dropbtn::after {
+        content: " ⏶";
+    }
+}   

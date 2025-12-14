@@ -3,6 +3,11 @@ let currentUser = null;
 let isAuthenticated = false;
 let authToken = null;
 
+// Карусель переменные и функции
+let currentCarouselIndex = 0;
+let carouselTracks = [];
+let carouselInterval;
+
 // Функции для работы с localStorage
 function saveAuthToLocalStorage(username, token) {
     localStorage.setItem('authUsername', username);
@@ -257,7 +262,6 @@ function addHeartToTrack(trackHTML, trackId) {
 // Функция для загрузки статистики избранного
 async function loadFavoritesStats() {
     try {
-        
         const response = await fetch('http://localhost:8000/api/favorites/stats/');
         const stats = await response.json();
         
@@ -314,7 +318,7 @@ async function loadFavoritesStats() {
                 `;
             } else {
                 stats.recent_favorites.forEach((track, index) => {
-                    const timeText = track.time_added || 'Недавно'; // fallback если время undefined
+                    const timeText = track.time_added || 'Недавно';
                     const rowHTML = `
                         <tr>
                             <td>${index + 1}</td>
@@ -342,6 +346,84 @@ async function loadFavoritesStats() {
         
     } catch (error) {
         console.error('Ошибка загрузки статистики:', error);
+    }
+}
+
+// Функция для проверки статуса избранного для трека
+async function checkFavoriteStatus(trackId, heartBtn) {
+    if (!isAuthenticated || !authToken) {
+        heartBtn.innerHTML = '♡';
+        heartBtn.classList.remove('added');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`http://localhost:8000/api/check-favorite/${trackId}/`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.is_favorite) {
+                heartBtn.innerHTML = '♥';
+                heartBtn.classList.add('added');
+            } else {
+                heartBtn.innerHTML = '♡';
+                heartBtn.classList.remove('added');
+            }
+        } else if (response.status === 401) {
+            // Если токен невалидный, разлогиниваем пользователя
+            clearAuthFromLocalStorage();
+            updateAuthUI(false);
+            heartBtn.innerHTML = '♡';
+            heartBtn.classList.remove('added');
+        }
+    } catch (error) {
+        console.error('Error checking favorite status:', error);
+        heartBtn.innerHTML = '♡';
+        heartBtn.classList.remove('added');
+    }
+}
+
+// Функция для проверки статуса всех избранных треков
+async function checkAllFavoritesStatus() {
+    if (!isAuthenticated || !authToken) {
+        // Если не авторизован, устанавливаем все сердечки в неактивное состояние
+        document.querySelectorAll('.heart-btn').forEach(btn => {
+            btn.innerHTML = '♡';
+            btn.classList.remove('added');
+        });
+        return;
+    }
+    
+    const heartButtons = document.querySelectorAll('.heart-btn');
+    
+    for (const btn of heartButtons) {
+        const trackId = btn.getAttribute('data-track-id');
+        await checkFavoriteStatus(trackId, btn);
+        // Добавляем небольшую задержку чтобы не перегружать сервер
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+}
+
+// Функция для проверки статуса избранных треков в карусели
+async function checkCarouselFavoritesStatus() {
+    if (!isAuthenticated || !authToken) {
+        document.querySelectorAll('.carousel-card .heart-btn').forEach(btn => {
+            btn.innerHTML = '♡';
+            btn.classList.remove('added');
+        });
+        return;
+    }
+    
+    const heartButtons = document.querySelectorAll('.carousel-card .heart-btn');
+    
+    for (const btn of heartButtons) {
+        const trackId = btn.getAttribute('data-track-id');
+        await checkFavoriteStatus(trackId, btn);
+        await new Promise(resolve => setTimeout(resolve, 50));
     }
 }
 
@@ -410,25 +492,34 @@ async function loadTracks() {
         const tracks = await response.json();
         console.log('Получены треки:', tracks);
         
+        // Инициализация карусели
+        initCarousel(tracks);
+        
+        // Загрузка основного списка треков
         const trackList = document.querySelector('.track-list');
-        trackList.innerHTML = '';
-        
-        console.log('Найдено треков:', tracks.length);
-        
-        tracks.forEach(track => {
-            console.log('Добавляю трек:', track.title);
+        if (trackList) {
+            trackList.innerHTML = '';
             
-            let trackHTML = createTrackHTML(track);
-            trackHTML = addHeartToTrack(trackHTML, track.id);
-            trackList.innerHTML += trackHTML;
-        });
-        
-        bindPlayButtons();
-        bindHeartButtons();
-        
-        if (isAuthenticated) {
-            setTimeout(() => checkAllFavoritesStatus(), 500);
+            console.log('Найдено треков:', tracks.length);
+            
+            tracks.forEach(track => {
+                console.log('Добавляю трек:', track.title);
+                
+                let trackHTML = createTrackHTML(track);
+                trackHTML = addHeartToTrack(trackHTML, track.id);
+                trackList.innerHTML += trackHTML;
+            });
+            
+            bindPlayButtons();
+            bindHeartButtons();
+            
+            // Проверяем статус избранного после загрузки треков
+            setTimeout(() => {
+                checkAllFavoritesStatus();
+            }, 1000);
         }
+        
+        loadFavoritesStats();
         
         console.log('Треки успешно загружены!');
         
@@ -478,145 +569,14 @@ function bindPlayButtons() {
     });
 }
 
-// Функция для проверки статуса избранного для трека
-async function checkFavoriteStatus(trackId, heartBtn) {
-    if (!isAuthenticated || !authToken) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`http://localhost:8000/api/check-favorite/${trackId}/`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.is_favorite) {
-                heartBtn.innerHTML = '♥';
-                heartBtn.classList.add('added');
-            } else {
-                heartBtn.innerHTML = '♡';
-                heartBtn.classList.remove('added');
-            }
-        }
-    } catch (error) {
-        console.error('Error checking favorite status:', error);
-    }
-}
-
-async function checkAllFavoritesStatus() {
-    if (!isAuthenticated || !authToken) return;
-    
-    const heartButtons = document.querySelectorAll('.heart-btn');
-    
-    for (const btn of heartButtons) {
-        const trackId = btn.getAttribute('data-track-id');
-        await checkFavoriteStatus(trackId, btn);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuth().then(auth => {
-        isAuthenticated = auth;
-    });
-    
-    loadTracks();
-    
-    loadFavoritesStats();
-    
-    // Выпадающее меню
-    const dropBtn = document.querySelector('.dropbtn');
-    const dropdownContent = document.querySelector('.dropdown-content');
-    
-    if (dropBtn) {
-        dropBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            dropdownContent.classList.toggle('show');
-        });
-    }
-    
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.dropdown')) {
-            dropdownContent.classList.remove('show');
-        }
-    });
-
-    // Модальное окно регистрации
-    const showRegisterBtn = document.getElementById('showRegister');
-    const registerModal = document.getElementById('registerModal');
-    const closeRegisterBtn = document.getElementById('closeRegister');
-
-    if (showRegisterBtn && registerModal) {
-        showRegisterBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            registerModal.classList.add('active');
-        });
-
-        closeRegisterBtn.addEventListener('click', function() {
-            registerModal.classList.remove('active');
-        });
-
-        registerModal.addEventListener('click', function(e) {
-            if (e.target === registerModal) {
-                registerModal.classList.remove('active');
-            }
-        });
-    }
-});
-
-// Обработчики для переключения форм в модалке
-const showLoginForm = document.getElementById('showLoginForm');
-const showRegisterForm = document.getElementById('showRegisterForm');
-const registerForm = document.getElementById('registerForm');
-const loginForm = document.getElementById('loginForm');
-
-if (showLoginForm) {
-    showLoginForm.addEventListener('click', function(e) {
-        e.preventDefault();
-        document.getElementById('registerFormContainer').style.display = 'none';
-        document.getElementById('loginFormContainer').style.display = 'block';
-    });
-}
-
-if (showRegisterForm) {
-    showRegisterForm.addEventListener('click', function(e) {
-        e.preventDefault();
-        document.getElementById('loginFormContainer').style.display = 'none';
-        document.getElementById('registerFormContainer').style.display = 'block';
-    });
-}
-
-// Обработчики форм
-if (registerForm) {
-    registerForm.addEventListener('submit', registerUser);
-}
-
-if (loginForm) {
-    loginForm.addEventListener('submit', loginUser);
-}
-function startStatsAutoUpdate() {
-    setInterval(() => {
-        if (document.querySelector('.favorites-recent-table')) {
-            loadFavoritesStats();
-        }
-    }, 60000); 
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    startStatsAutoUpdate();
-});
-let currentCarouselIndex = 0;
-let carouselTracks = [];
-let carouselInterval;
+// Карусель функции
 function startCarouselAutoScroll() {
     stopCarouselAutoScroll();
     carouselInterval = setInterval(() => {
         nextSlide();
     }, 5000);
 }
+
 function stopCarouselAutoScroll() {
     if (carouselInterval) {
         clearInterval(carouselInterval);
@@ -671,6 +631,11 @@ function initCarousel(tracks) {
     setTimeout(() => {
         bindCarouselHeartButtons();
         bindCarouselPlayButtons();
+        
+        // Проверяем статус избранного для карусели
+        if (isAuthenticated) {
+            setTimeout(() => checkCarouselFavoritesStatus(), 1200);
+        }
     }, 100);
 }
 
@@ -697,22 +662,20 @@ function updateCarouselPositions() {
 }
 
 function goToSlide(index) {
-    stopCarouselAutoScroll(); 
+    stopCarouselAutoScroll();
     currentCarouselIndex = index;
     updateCarouselPositions();
-    startCarouselAutoScroll(); 
+    startCarouselAutoScroll();
 }
 
 function nextSlide() {
     currentCarouselIndex = (currentCarouselIndex + 1) % carouselTracks.length;
     updateCarouselPositions();
-    startCarouselAutoScroll();
 }
 
 function prevSlide() {
     currentCarouselIndex = (currentCarouselIndex - 1 + carouselTracks.length) % carouselTracks.length;
     updateCarouselPositions();
-    startCarouselAutoScroll(); 
 }
 
 function bindCarouselHeartButtons() {
@@ -810,27 +773,186 @@ function bindCarouselPlayButtons() {
     });
 }
 
-async function loadTracks() {
-    try {
-        console.log('Начинаю загрузку треков...');
+// Мобильное меню - ИСПРАВЛЕННАЯ ВЕРСИЯ
+function initMobileMenu() {
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const menu = document.querySelector('.menu');
+    const dropbtn = document.querySelector('.dropbtn');
+    const dropdownContent = document.querySelector('.dropdown-content');
+    
+    if (mobileMenuBtn && menu) {
+        mobileMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            menu.classList.toggle('active');
+            this.classList.toggle('active');
+        });
         
-        const response = await fetch('http://localhost:8000/api/tracks/');
-        const tracks = await response.json();
-        console.log('Получены треки:', tracks);
+        // Обработчик для выпадающего меню в мобильной версии
+        if (dropbtn && dropdownContent) {
+            dropbtn.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropdownContent.classList.toggle('show');
+                }
+            });
+        }
         
-        initCarousel(tracks);
+        // Закрытие меню при клике на обычные ссылки (не выпадающие)
+        document.querySelectorAll('.menu a').forEach(link => {
+            if (!link.classList.contains('dropbtn')) {
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        menu.classList.remove('active');
+                        mobileMenuBtn.classList.remove('active');
+                        if (dropdownContent) {
+                            dropdownContent.classList.remove('show');
+                        }
+                    }
+                });
+            }
+        });
         
-        loadFavoritesStats();
-        
-        console.log('Карусель успешно инициализирована!');
-        
-    } catch (error) {
-        console.error('Ошибка загрузки треков:', error);
+        // Закрытие меню при клике вне его
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                if (!e.target.closest('.menu') && !e.target.closest('.mobile-menu-btn')) {
+                    menu.classList.remove('active');
+                    mobileMenuBtn.classList.remove('active');
+                    if (dropdownContent) {
+                        dropdownContent.classList.remove('show');
+                    }
+                }
+            }
+        });
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+// Свайпы для карусели на мобильных
+function initCarouselSwipe() {
+    const carouselContainer = document.querySelector('.carousel-container');
+    let startX = 0;
+    let endX = 0;
+    const swipeThreshold = 50; // минимальная дистанция свайпа
     
+    if (carouselContainer) {
+        carouselContainer.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        carouselContainer.addEventListener('touchmove', (e) => {
+            endX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        carouselContainer.addEventListener('touchend', () => {
+            const diff = startX - endX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    // Свайп влево - следующий слайд
+                    nextSlide();
+                } else {
+                    // Свайп вправо - предыдущий слайд
+                    prevSlide();
+                }
+            }
+        });
+    }
+}
+
+// Оптимизация для мобильных устройств
+function optimizeForMobile() {
+    // Предотвращаем масштабирование при двойном тапе
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+    
+    // Улучшаем отзывчивость
+    document.addEventListener('touchstart', function() {}, {passive: true});
+}
+
+// Обрезка текста
+function truncateText() {
+    document.querySelectorAll('.track-artist').forEach(element => {
+        const text = element.textContent;
+        if (text.length > 15) {
+            element.textContent = text.substring(0, 15) + '...';
+        }
+    });
+}
+
+// Автообновление статистики
+function startStatsAutoUpdate() {
+    setInterval(() => {
+        if (document.querySelector('.favorites-recent-table')) {
+            loadFavoritesStats();
+        }
+    }, 60000);
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth().then(auth => {
+        isAuthenticated = auth;
+    });
+    
+    loadTracks();
+    loadFavoritesStats();
+    startStatsAutoUpdate();
+    
+    // Мобильные функции
+    initMobileMenu();
+    initCarouselSwipe();
+    optimizeForMobile();
+    
+    // Выпадающее меню для десктопа
+    const dropBtn = document.querySelector('.dropbtn');
+    const dropdownContent = document.querySelector('.dropdown-content');
+    
+    if (dropBtn) {
+        dropBtn.addEventListener('click', function(e) {
+            if (window.innerWidth > 768) { // Только для десктопа
+                e.preventDefault();
+                e.stopPropagation();
+                dropdownContent.classList.toggle('show');
+            }
+        });
+    }
+    
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown') && window.innerWidth > 768) {
+            dropdownContent.classList.remove('show');
+        }
+    });
+
+    // Модальное окно регистрации
+    const showRegisterBtn = document.getElementById('showRegister');
+    const registerModal = document.getElementById('registerModal');
+    const closeRegisterBtn = document.getElementById('closeRegister');
+
+    if (showRegisterBtn && registerModal) {
+        showRegisterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            registerModal.classList.add('active');
+        });
+
+        closeRegisterBtn.addEventListener('click', function() {
+            registerModal.classList.remove('active');
+        });
+
+        registerModal.addEventListener('click', function(e) {
+            if (e.target === registerModal) {
+                registerModal.classList.remove('active');
+            }
+        });
+    }
+
+    // Управление каруселью
     const prevBtn = document.querySelector('.carousel-btn-prev');
     const nextBtn = document.querySelector('.carousel-btn-next');
     
@@ -838,6 +960,7 @@ document.addEventListener('DOMContentLoaded', function() {
         prevBtn.addEventListener('click', function() {
             stopCarouselAutoScroll();
             prevSlide();
+            startCarouselAutoScroll();
         });
     }
     
@@ -845,6 +968,7 @@ document.addEventListener('DOMContentLoaded', function() {
         nextBtn.addEventListener('click', function() {
             stopCarouselAutoScroll();
             nextSlide();
+            startCarouselAutoScroll();
         });
     }
     
@@ -852,17 +976,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'ArrowLeft') {
             stopCarouselAutoScroll();
             prevSlide();
+            startCarouselAutoScroll();
         } else if (e.key === 'ArrowRight') {
             stopCarouselAutoScroll();
             nextSlide();
-        }
-    });
-    
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('carousel-dot')) {
-            stopCarouselAutoScroll();
-            const index = parseInt(e.target.getAttribute('data-index'));
-            goToSlide(index);
+            startCarouselAutoScroll();
         }
     });
     
@@ -873,14 +991,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     startCarouselAutoScroll();
+    setTimeout(truncateText, 100);
 });
-function truncateText() {
-    document.querySelectorAll('.track-artist').forEach(element => {
-        const text = element.textContent;
-        if (text.length > 15) {
-            element.textContent = text.substring(0, 15) + '...';
-        }
+
+// Обработчики для переключения форм в модалке
+const showLoginForm = document.getElementById('showLoginForm');
+const showRegisterForm = document.getElementById('showRegisterForm');
+const registerForm = document.getElementById('registerForm');
+const loginForm = document.getElementById('loginForm');
+
+if (showLoginForm) {
+    showLoginForm.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('registerFormContainer').style.display = 'none';
+        document.getElementById('loginFormContainer').style.display = 'block';
     });
 }
 
-setTimeout(truncateText, 100);
+if (showRegisterForm) {
+    showRegisterForm.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('loginFormContainer').style.display = 'none';
+        document.getElementById('registerFormContainer').style.display = 'block';
+    });
+}
+
+// Обработчики форм
+if (registerForm) {
+    registerForm.addEventListener('submit', registerUser);
+}
+
+if (loginForm) {
+    loginForm.addEventListener('submit', loginUser);
+}
+
+// Обработчик изменения размера окна для переключения между мобильным и десктопным меню
+window.addEventListener('resize', function() {
+    const menu = document.querySelector('.menu');
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const dropdownContent = document.querySelector('.dropdown-content');
+    
+    if (window.innerWidth > 768) {
+        // Десктоп - скрываем мобильное меню
+        if (menu) menu.classList.remove('active');
+        if (mobileMenuBtn) mobileMenuBtn.classList.remove('active');
+        if (dropdownContent) dropdownContent.classList.remove('show');
+    } else {
+        // Мобильная - скрываем десктопное выпадающее меню
+        if (dropdownContent) dropdownContent.classList.remove('show');
+    }
+});
